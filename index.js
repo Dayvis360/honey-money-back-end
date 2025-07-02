@@ -1,14 +1,20 @@
-// Prueba de conexión a Supabase
+const express = require('express');
+const cors = require('cors');
 const supabase = require('./supabaseClient');
 
-async function testConnection() {
-  // Cambia 'tu_tabla' por el nombre de una tabla real en tu base de datos Supabase
-  const { data, error } = await supabase.from('usuario').select('*');
-  if (error) {
-    console.error('Error al conectar con Supabase:', error.message);
-  } else {
-    console.log('Conexión exitosa. Datos:', data);
-  }
-}
+const app = express();
+app.use(cors());
+const port = 3000;
 
-testConnection();
+app.get("/usuarios", async (req, res) => {
+  const { data, error } = await supabase.from("usuario").select("*");
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.listen(port, () => {
+  console.log(`Servidor corriendo en http://localhost:${port}`);
+});
+
+
