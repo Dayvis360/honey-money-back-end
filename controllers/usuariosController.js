@@ -2,7 +2,7 @@ import supabase from '../supabaseClient.js';
 
 export const obtenerUsuarios = async (req, res) => {
     const { data, error } = await supabase
-        .from('usuario')
+        .from('usuarios')
         .select('*');
     if(error){
         return res.status(500).json({ error: 'Error al obtener los usuarios' });
@@ -25,7 +25,7 @@ export const signUp = async (req, res) => {
 
     // Verificar si ya existe un usuario con el mismo gmail o dni
     const { data: existingUser, error: searchError } = await supabase
-        .from('usuario')
+        .from('usuarios')
         .select('*')
         .or(`gmail.eq.${gmail},dni.eq.${dni}`)
         .maybeSingle();
@@ -47,7 +47,7 @@ export const signUp = async (req, res) => {
 
     // Registro en la tabla usuario
     const { data: userData, error: userError } = await supabase
-        .from('usuario')
+        .from('usuarios')
         .insert([
             {
                 nombre,
@@ -74,9 +74,8 @@ export const login = async (req, res) => {
 
     // Si no se proporciona gmail, buscar por dni
     if (!gmail && dni) {
-        // Buscar el usuario por dni en la tabla usuario
         const { data: userData, error: userError } = await supabase
-            .from('usuario')
+            .from('usuarios')
             .select('gmail')
             .eq('dni', dni)
             .single();
@@ -97,7 +96,20 @@ export const login = async (req, res) => {
     if (error) {
         return res.status(401).json({ error: error.message });
     }
-    return res.status(200).json({ message: 'Login exitoso', data });
+
+    // Buscar el nombre en la tabla usuarios
+    const { data: userInfo, error: userInfoError } = await supabase
+        .from('usuarios')
+        .select('nombre')
+        .eq('gmail', emailToUse.toLowerCase())
+        .single();
+
+    let nombre = '';
+    if (userInfo && userInfo.nombre) {
+        nombre = userInfo.nombre;
+    }
+
+    return res.status(200).json({ message: 'Login exitoso', nombre, data });
 }
 
 // Logout de usuario con Supabase Auth
@@ -141,7 +153,7 @@ export const deleteAccount = async (req, res) => {
 
     // Eliminar de la tabla usuario (por id de auth)
     const { error: deleteDbError } = await supabase
-        .from('usuario')
+        .from('usuarios')
         .delete()
         .eq('id', userId);
     if (deleteDbError) {
