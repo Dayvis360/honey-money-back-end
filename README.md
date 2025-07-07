@@ -66,3 +66,9 @@ Inicia sesión con gmail o dni y contraseña. Si el login es exitoso, la respues
 - El nombre y apellido se capitalizan visualmente solo en los formularios, pero se guardan tal como los escribe el usuario.
 - Los campos de contraseña nunca aplican mayúscula automática ni autocorrección.
 - El home muestra el nombre guardado en `localStorage` tras el login exitoso.
+
+## Endpoint de producción
+
+El backend está desplegado en:
+
+https://honey-money-back-end-production.up.railway.app/usuarios/
