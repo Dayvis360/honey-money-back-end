@@ -41,13 +41,14 @@ El servidor correrá por defecto en `http://localhost:3000`.
   **Body esperado:**
   ```json
   {
-    "nombre_completo": "string",
+    "nombre": "string",
+    "apellido": "string",
     "dni": "string",
-    "fecha_de_nacimiento": "YYYY-MM-DD",
     "nacionalidad": "string",
-    "correo_electronico": "string",
-    "numero_de_celular": "string",
-    "contraseña": "string"
+    "gmail": "string",
+    "telefono": "string",
+    "contraseña": "string",
+    "fecha_de_nacimiento": "YYYY-MM-DD"
   }
   ```
 
@@ -56,8 +57,42 @@ El servidor correrá por defecto en `http://localhost:3000`.
   **Body esperado:**
   ```json
   {
-    "correo_electronico": "string", // o "dni": "string"
+    "gmail": "string", // o "dni": "string"
     "contraseña": "string"
+  }
+  ```
+
+- **POST `/usuarios/logout`**  
+  Cierra la sesión del usuario.  
+  **Requiere:** Enviar el token de sesión en el header `Authorization`.
+  
+  **Ejemplo de uso:**
+  ```http
+  POST /usuarios/logout HTTP/1.1
+  Host: localhost:3000
+  Authorization: Bearer TU_TOKEN_AQUI
+  ```
+  **Respuesta exitosa:**
+  ```json
+  {
+    "message": "Sesión cerrada correctamente"
+  }
+  ```
+
+- **DELETE `/usuarios/delete`**  
+  Elimina la cuenta del usuario autenticado.  
+  **Requiere:** Enviar el token de sesión en el header `Authorization`.
+  
+  **Ejemplo de uso:**
+  ```http
+  DELETE /usuarios/delete HTTP/1.1
+  Host: localhost:3000
+  Authorization: Bearer TU_TOKEN_AQUI
+  ```
+  **Respuesta exitosa:**
+  ```json
+  {
+    "message": "Cuenta eliminada correctamente"
   }
   ```
 
@@ -76,12 +111,13 @@ La API puede devolver distintos errores según la operación y los datos enviado
 
 - **400 Bad Request**  
   - Cuando faltan campos obligatorios en el body.
-  - Cuando el correo electrónico ya está registrado en Supabase.
+  - Cuando el gmail ya está registrado en Supabase.
   - Cuando hay un error al insertar el usuario en la base de datos.
+  - Cuando ya existe un usuario con el mismo gmail o DNI.
   - **Respuesta ejemplo:**
     ```json
     {
-      "error": "El correo electrónico ya está registrado"
+      "error": "Ya existe un usuario con ese gmail o DNI"
     }
     ```
 
@@ -97,11 +133,11 @@ La API puede devolver distintos errores según la operación y los datos enviado
 ### Errores en el login (`/usuarios/login`)
 
 - **400 Bad Request**  
-  - Cuando no se proporciona ni correo electrónico ni DNI.
+  - Cuando no se proporciona ni gmail ni DNI.
   - **Respuesta ejemplo:**
     ```json
     {
-      "error": "Debes proporcionar correo_electronico o dni"
+      "error": "Debes proporcionar gmail o dni"
     }
     ```
 
@@ -118,6 +154,46 @@ La API puede devolver distintos errores según la operación y los datos enviado
     ```json
     {
       "error": "Contraseña incorrecta"
+    }
+    ```
+
+### Errores en el logout (`/usuarios/logout`)
+
+- **401 Unauthorized**  
+  - Cuando no se envía el token en el header `Authorization`.
+  - **Respuesta ejemplo:**
+    ```json
+    {
+      "error": "No token provided"
+    }
+    ```
+
+- **400 Bad Request**  
+  - Cuando el token es inválido o ya expiró.
+  - **Respuesta ejemplo:**
+    ```json
+    {
+      "error": "Token inválido o expirado"
+    }
+    ```
+
+### Errores al eliminar cuenta (`/usuarios/delete`)
+
+- **401 Unauthorized**  
+  - Cuando no se envía el token en el header `Authorization`.
+  - **Respuesta ejemplo:**
+    ```json
+    {
+      "error": "No token provided"
+    }
+    ```
+
+- **400 Bad Request**  
+  - Cuando el token es inválido, expirado o hay un error al eliminar la cuenta.
+  - **Respuesta ejemplo:**
+    ```json
+    {
+      "error": "Token inválido o expirado"
     }
     ```
 
