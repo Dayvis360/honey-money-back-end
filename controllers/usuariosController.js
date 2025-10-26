@@ -162,6 +162,7 @@ export const deleteAccount = async (req, res) => {
 
     return res.status(200).json({ message: 'Cuenta eliminada correctamente' });
 }
+
 // Transferir dinero entre usuarios
 export const transferir = async (req, res) => {
     const { remitente_id, destinatario_id, monto } = req.body;

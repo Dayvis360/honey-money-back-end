@@ -1,5 +1,9 @@
 import express from 'express';
+
 import { obtenerUsuarios, signUp, login, logout, deleteAccount, transferir, recibirDinero } from '../controllers/usuariosController.js';
+
+import { obtenerUsuarios, signUp, login, logout, deleteAccount } from '../controllers/usuariosController.js';
+
 
 const router = express.Router();
 
@@ -28,5 +32,6 @@ router.post('/transferir', transferir);
 
 // Recibir dinero
 router.post('/recibir', recibirDinero);
+
 
 export default router;
