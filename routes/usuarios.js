@@ -2,7 +2,6 @@ import express from 'express';
 
 import { obtenerUsuarios, signUp, login, logout, deleteAccount, transferir, recibirDinero } from '../controllers/usuariosController.js';
 
-import { obtenerUsuarios, signUp, login, logout, deleteAccount } from '../controllers/usuariosController.js';
 
 
 const router = express.Router();
