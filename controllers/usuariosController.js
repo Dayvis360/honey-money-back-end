@@ -276,3 +276,138 @@ export const recibirDinero = async (req, res) => {
         saldo_actual: nuevoSaldo
     });
 };
+
+// Agregar dinero al saldo del usuario autenticado
+export const addAmount = async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const { monto } = req.body;
+
+    if (!monto || monto <= 0) {
+        return res.status(400).json({ error: 'Debes ingresar un monto válido mayor a 0' });
+    }
+
+    // Obtener el usuario autenticado
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !userData?.user) {
+        return res.status(401).json({ error: 'Token inválido o sesión expirada' });
+    }
+
+    const userEmail = userData.user.email;
+
+    // Buscar al usuario en la tabla "usuarios" por su gmail
+    const { data: usuario, error: usuarioError } = await supabase
+        .from('usuarios')
+        .select('id, nombre, saldo')
+        .eq('gmail', userEmail)
+        .single();
+
+    if (usuarioError || !usuario) {
+        return res.status(404).json({ error: 'Usuario no encontrado en la base de datos' });
+    }
+
+    const nuevoSaldo = (usuario.saldo || 0) + monto;
+
+    // Actualizar el saldo del usuario
+    const { error: updateError } = await supabase
+        .from('usuarios')
+        .update({ saldo: nuevoSaldo })
+        .eq('id', usuario.id);
+
+    if (updateError) {
+        return res.status(500).json({ error: 'Error al actualizar el saldo' });
+    }
+
+    return res.status(200).json({
+        message: 'Monto agregado exitosamente',
+        usuario: usuario.nombre,
+        monto_agregado: monto,
+        saldo_actual: nuevoSaldo
+    });
+};
+
+// Pago de servicios desde el saldo del usuario autenticado
+export const pagoServicios = async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const { servicio, monto } = req.body;
+
+    // Validar datos
+    if (!servicio || !monto) {
+        return res.status(400).json({ error: 'Faltan datos: servicio o monto' });
+    }
+
+    if (monto <= 0) {
+        return res.status(400).json({ error: 'El monto debe ser mayor que 0' });
+    }
+
+    // Lista simulada de servicios disponibles
+    const serviciosDisponibles = [
+        { nombre: 'luz', descripcion: 'Pago de energía eléctrica' },
+        { nombre: 'agua', descripcion: 'Pago del servicio de agua corriente' },
+        { nombre: 'internet', descripcion: 'Pago del servicio de internet' },
+        { nombre: 'cargar_saldo_celular', descripcion: 'Recarga de saldo móvil' }
+    ];
+
+    // Verificar que el servicio exista
+    const servicioEncontrado = serviciosDisponibles.find(s => s.nombre === servicio.toLowerCase());
+    if (!servicioEncontrado) {
+        return res.status(400).json({ 
+            error: 'Servicio no válido',
+            servicios_disponibles: serviciosDisponibles.map(s => s.nombre)
+        });
+    }
+
+    // Obtener usuario autenticado
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !userData?.user) {
+        return res.status(401).json({ error: 'Token inválido o sesión expirada' });
+    }
+
+    const userEmail = userData.user.email;
+
+    // Buscar el usuario en la base de datos
+    const { data: usuario, error: usuarioError } = await supabase
+        .from('usuarios')
+        .select('id, nombre, saldo')
+        .eq('gmail', userEmail)
+        .single();
+
+    if (usuarioError || !usuario) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Verificar saldo suficiente
+    if (usuario.saldo < monto) {
+        return res.status(400).json({ error: 'Saldo insuficiente para realizar el pago' });
+    }
+
+    // Restar el monto del saldo
+    const nuevoSaldo = usuario.saldo - monto;
+
+    const { error: updateError } = await supabase
+        .from('usuarios')
+        .update({ saldo: nuevoSaldo })
+        .eq('id', usuario.id);
+
+    if (updateError) {
+        return res.status(500).json({ error: 'Error al procesar el pago' });
+    }
+
+    return res.status(200).json({
+        message: 'Pago realizado exitosamente',
+        usuario: usuario.nombre,
+        servicio_pagado: servicioEncontrado.nombre,
+        descripcion: servicioEncontrado.descripcion,
+        monto_pagado: monto,
+        saldo_actual: nuevoSaldo
+    });
+};
