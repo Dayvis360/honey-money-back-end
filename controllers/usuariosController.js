@@ -16,30 +16,29 @@ export const signUp = async (req, res) => {
         nombre,
         apellido,
         dni,
-        nacionalidad,
-        gmail,
+        f_nac,
+        correo,
         telefono,
-        contraseña,
-        fecha_de_nacimiento
+        contrasena
     } = req.body;
 
-    // Verificar si ya existe un usuario con el mismo gmail o dni
+    // Verificar si ya existe un usuario con el mismo correo o dni
     const { data: existingUser, error: searchError } = await supabase
         .from('usuarios')
         .select('*')
-        .or(`gmail.eq.${gmail},dni.eq.${dni}`)
+        .or(`correo.eq.${correo},dni.eq.${dni}`)
         .maybeSingle();
     if (searchError) {
         return res.status(500).json({ error: 'Error al verificar usuario existente' });
     }
     if (existingUser) {
-        return res.status(400).json({ error: 'Ya existe un usuario con ese gmail o DNI' });
+        return res.status(400).json({ error: 'Ya existe un usuario con ese correo o DNI' });
     }
 
     // Registro en Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: gmail,
-        password: contraseña
+        correo: correo,
+        contraseña: contrasena
     });
     if (authError) {
         return res.status(400).json({ error: authError.message });
@@ -47,19 +46,18 @@ export const signUp = async (req, res) => {
 
     // Registro en la tabla usuario
     const { data: userData, error: userError } = await supabase
-        .from('usuarios')
+        .from('Usuarios')
         .insert([
             {
                 nombre,
                 apellido,
                 dni,
-                nacionalidad,
-                gmail,
+                f_nac,
+                correo,
                 telefono,
-                contraseña,
-                fecha_de_nacimiento
-            }
-        ]);
+                contrasena,
+                saldo: 0
+    }]);
     if (userError) {
         return res.status(400).json({ error: userError.message });
     }
@@ -67,31 +65,36 @@ export const signUp = async (req, res) => {
     return res.status(201).json({ message: 'Usuario registrado correctamente', authData, userData });
 }
 
+
+
+
+
+
 // Login de usuario con autenticación de Supabase
 export const login = async (req, res) => {
-    const { gmail, dni, contraseña } = req.body;
-    let emailToUse = gmail;
+    const { correo, dni, contrasena } = req.body;
+    let emailToUse = correo;
 
-    // Si no se proporciona gmail, buscar por dni
-    if (!gmail && dni) {
+    // Si no se proporciona correo, buscar por dni
+    if (!correo && dni) {
         const { data: userData, error: userError } = await supabase
             .from('usuarios')
-            .select('gmail')
+            .select('correo')
             .eq('dni', dni)
             .single();
         if (userError || !userData) {
             return res.status(401).json({ error: 'Usuario no encontrado con ese DNI' });
         }
-        emailToUse = userData.gmail;
+        emailToUse = userData.correo;
     }
 
     if (!emailToUse) {
-        return res.status(400).json({ error: 'Debes proporcionar gmail o dni' });
+        return res.status(400).json({ error: 'Debes proporcionar correo o dni' });
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({
         email: emailToUse,
-        password: contraseña
+        password: contrasena
     });
     if (error) {
         return res.status(401).json({ error: error.message });
@@ -101,7 +104,7 @@ export const login = async (req, res) => {
     const { data: userInfo, error: userInfoError } = await supabase
         .from('usuarios')
         .select('nombre')
-        .eq('gmail', emailToUse.toLowerCase())
+        .eq('correo', emailToUse.toLowerCase())
         .single();
 
     let nombre = '';
@@ -299,11 +302,11 @@ export const addAmount = async (req, res) => {
 
     const userEmail = userData.user.email;
 
-    // Buscar al usuario en la tabla "usuarios" por su gmail
+    // Buscar al usuario en la tabla "usuarios" por su correo
     const { data: usuario, error: usuarioError } = await supabase
         .from('usuarios')
         .select('id, nombre, saldo')
-        .eq('gmail', userEmail)
+        .eq('correo', userEmail)
         .single();
 
     if (usuarioError || !usuario) {
@@ -378,7 +381,7 @@ export const pagoServicios = async (req, res) => {
     const { data: usuario, error: usuarioError } = await supabase
         .from('usuarios')
         .select('id, nombre, saldo')
-        .eq('gmail', userEmail)
+        .eq('correo', userEmail)
         .single();
 
     if (usuarioError || !usuario) {
