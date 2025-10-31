@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Rutas
+// Ruta principal
 app.use('/usuarios', usuariosRouter);
 
 app.listen(PORT, () => {

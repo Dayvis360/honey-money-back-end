@@ -1,14 +1,15 @@
 import express from 'express';
 
-import { obtenerUsuarios, signUp, login, logout, deleteAccount, transferir, recibirDinero } from '../controllers/usuariosController.js';
+import { obtenerUsuarios, signUp, login, logout, deleteAccount, transferir, recibirDinero, holaMundo } from '../controllers/usuariosController.js';
 
 
 
 const router = express.Router();
 
+router.get('/hola', holaMundo);
 
 // Obtener todos los usuarios
-router.get('/', obtenerUsuarios);
+router.get('/api', obtenerUsuarios);
 
 // Registro (sign up)
 // Espera: nombre, apellido, dni, nacionalidad, gmail, telefono, contraseña, fecha_de_nacimiento

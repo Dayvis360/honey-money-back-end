@@ -1,8 +1,12 @@
 import supabase from '../supabaseClient.js';
 
+export const holaMundo = (req, res) => {
+    res.json({ message: 'hola mundo express'});
+};
+
 export const obtenerUsuarios = async (req, res) => {
     const { data, error } = await supabase
-        .from('usuarios')
+        .from('Usuarios')
         .select('*');
     if(error){
         return res.status(500).json({ error: 'Error al obtener los usuarios' });
@@ -49,8 +53,7 @@ export const signUp = async (req, res) => {
         .from('Usuarios')
         .insert([
             {
-                nombre,
-                apellido,
+                nombre_completo: nombre + ' ' + apellido,
                 dni,
                 f_nac,
                 correo,
